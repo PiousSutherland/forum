@@ -25,4 +25,43 @@ class PostController extends Controller
             'comments' => fn () => CommentResource::collection($post->comments()->with('user')->latest()->latest('id')->paginate(10))
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'title' => ['required|string|min:10|max:120'],
+            'body' => ['required|string|min:100|max:10000'],
+        ]);
+
+        $post = Post::create([
+            ...$data,
+            'user_id' => $request->user()->id,
+        ]);
+
+        return to_route('posts.show', $post);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Post $post)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Post $post)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Post $post)
+    {
+        //
+    }
 }

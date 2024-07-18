@@ -4,26 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Post;
-use App\Policies\CommentPolicy;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $this->authorizeResource(Comment::class, 'comment');
     }
 
     /**
@@ -31,29 +18,15 @@ class CommentController extends Controller
      */
     public function store(Request $request, Post $post)
     {
+        $data = $request->validate(['body' => 'required|string|max:2500']);
+
         Comment::create([
-            ...$request->validate(['body' => 'required|string|max:2500']),
+            'body' => $data['body'],
             'post_id' => $post->id,
             'user_id' => $request->user()->id
         ]);
 
-        return to_route('posts.show', $post);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Comment $comment)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Comment $comment)
-    {
-        //
+        return to_route('posts.show', $post)->banner('Comment added.');
     }
 
     /**
@@ -61,7 +34,13 @@ class CommentController extends Controller
      */
     public function update(Request $request, Comment $comment)
     {
-        //
+        $this->authorize('update', $comment);
+        $data = $request->validate(['body' => 'required|string|max:2500']);
+
+        $comment->update($data);
+
+        return to_route('posts.show', ['post' => $comment->post_id, 'page' => $request->query('page')])
+            ->banner('Comment updated.');
     }
 
     /**
@@ -69,11 +48,9 @@ class CommentController extends Controller
      */
     public function destroy(Request $request, Comment $comment)
     {
-        Gate::authorize('delete', $comment);
-        if(! CommentPolicy::delete(auth()->user(), $comment)) abort(403);
-
         $comment->delete();
 
-        return to_route('posts.show', $comment->post_id);
+        return to_route('posts.show', ['post' => $comment->post_id, 'page' => $request->query('page')])
+            ->banner('Comment deleted.');
     }
 }
