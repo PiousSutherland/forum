@@ -9,6 +9,11 @@ use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
+    function __construct()
+    {
+        $this->authorizeResource(Post::class);
+    }
+
     public function index()
     {
         return inertia('Posts/Index', [
@@ -39,6 +44,11 @@ class PostController extends Controller
         ]);
 
         return to_route('posts.show', $post);
+    }
+
+    public function create()
+    {
+        return inertia('Posts/Create');
     }
 
     /**
